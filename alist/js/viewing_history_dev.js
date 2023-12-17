@@ -117,13 +117,13 @@ class ViewingHistory {
         window.localStorage.setItem('viewing-history', JSON.stringify(value, null, 4));
         this._history = value;
     }
-    // get syncTime() {
-    //     return window.localStorage.getItem('viewing-history-sync-time')
-    // }
+    get syncTime() {
+        return window.localStorage.getItem('viewing-history-sync-time')
+    }
 
-    // set syncTime(value) {
-    //     window.localStorage.setItem('viewing-history-sync-time', value)
-    // }
+    set syncTime(value) {
+        window.localStorage.setItem('viewing-history-sync-time', value)
+    }
 
     update(item) {
         item.modified = Date.now()
@@ -209,7 +209,7 @@ class ViewingHistory {
             });
         if (!origin) return -1
         origin = JSON.parse(origin)
-        const origin_data = origin.data
+        const origin_data = origin
         //数据没更新则不处理
         let merge_data = [];
         try {
@@ -232,22 +232,23 @@ class ViewingHistory {
                  * 此时新增数据时间大于同步时间
                  * 3号删除数据时，
                  */
-                if (item.modified > origin.syncTime) {
+                if (item.modified > this.syncTime) {
 
                     const merge_get = merge_data_map.get(item.path);
                     if (!merge_get && !item.isDelete) {
                         merge_data_map.set(item.path, item)
-                    } else if (merge_get && !item.isDelete) {
+                    } else if (merge_get) {
                         //不管删除修改还是更新都保留最新的操作
                         if (item.modified > merge_get.modified) {
                             merge_data_map.set(item.path, item)
                         }
-                    } else if (merge_get && item.isDelete) {
-                        if (item.modified > merge_get.modified) {
-                            merge_data_map.delete(item.path)
-                        }
+                    } 
+                    // else if (merge_get && item.isDelete) {
+                    //     if (item.modified > merge_get.modified) {
+                    //         merge_data_map.delete(item.path)
+                    //     }
 
-                    }
+                    // }
                 }
             }
             merge_data = [...merge_data_map.values()]
@@ -258,8 +259,7 @@ class ViewingHistory {
 
 
         // 上传数据
-        //!这里上传是sycnTime不对，也不能仅仅用syncTime来判断
-        const upload_data = JSON.stringify({'syncTime': Date.now(), 'data': merge_data}, null, 4); // 要发送的数据
+        const upload_data = JSON.stringify(merge_data, null, 4); // 要发送的数据
         const res = await fetch('/api/fs/put', {
             method: 'PUT',
             headers: {
@@ -281,7 +281,7 @@ class ViewingHistory {
                 if (data.code !== 200) {
                     throw new Error(data);
                 }
-                this.history = merge_data
+                this.history = merge_data.filter(item => !item.isDelete)
                 console.log(merge_data)
                 const button = $('.header-left .hope-image:last-child');
                 button && (button.style.borderColor = 'orangered');
