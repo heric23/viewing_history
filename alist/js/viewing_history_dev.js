@@ -225,33 +225,25 @@ class ViewingHistory {
             }, new Map());
             //把本地数据合并到远程
             for (const item of all_history) {
-                //本地最新的操作，旧的数据以服务器为准
-                //服务器已删除，删除操作是最新的，但本地新增无法被删除
-                /**
-                 * 比如1号服务器同步，同步时间为1号，2号在本地新增数据，
-                 * 此时新增数据时间大于同步时间
-                 * 3号删除数据时，
-                 */
                 if (item.modified > this.syncTime) {
 
                     const merge_get = merge_data_map.get(item.path);
-                    if (!merge_get && !item.isDelete) {
-                        merge_data_map.set(item.path, item)
-                    } else if (merge_get && !item.isDelete) {
+                    if (!merge_get) {
+                        !item.isDelete && merge_data_map.set(item.path, item)
+                        //删除的数据只保留几项必要的数据
+                        item.isDelete && merge_data_map.set(item.path, {
+                            path: item.path,
+                            modified: item.modified,
+                            isDelete: item.isDelete,
+                        })
+                    } else if (item.modified > merge_get.modified) {
                         //不管删除修改还是更新都保留最新的操作
-                        if (item.modified > merge_get.modified) {
-                            merge_data_map.set(item.path, item)
-                        }
-                    } else if (merge_get && item.isDelete) {
-                        if (item.modified > merge_get.modified) {
-                            //删除的数据只保留几项必要的数据
-                            merge_data_map.set(item.path, {
-                                path: item.path,
-                                modified: item.modified,
-                                isDelete: item.isDelete,
-                            })
-                        }
-
+                        !item.isDelete && merge_data_map.set(item.path, item);
+                        item.isDelete && merge_data_map.set(item.path, {
+                            path: item.path,
+                            modified: item.modified,
+                            isDelete: item.isDelete,
+                        });
                     }
                 }
             }
@@ -285,6 +277,7 @@ class ViewingHistory {
                 if (data.code !== 200) {
                     throw new Error(data);
                 }
+                this.syncTime = Date.now()
                 this.history = merge_data.filter(item => !item.isDelete)
                 console.log(merge_data)
                 const button = $('.header-left .hope-image:last-child');
