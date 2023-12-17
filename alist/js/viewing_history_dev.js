@@ -140,24 +140,6 @@ class ViewingHistory {
             }
         }
         this.history = temp
-
-        // if (!this.history.find(currentValue => currentValue.path === item.path)) {
-        //     this.history = this.history.concat(item)
-        // } else {
-        //     this.history = this.history.reduce((pre, currentValue) => {
-        //         //已删除数据不做修改
-        //         console.log(item, this.history)
-        //         if (!!currentValue.isDelete) return pre
-        //         if (currentValue.path === item.path) {
-        //             pre.push(item)
-
-        //         } else {
-        //             pre.push(currentValue)
-        //         }
-        //         return pre
-        //     }, [])
-        // }
-
     }
 
     search(path) {
@@ -168,9 +150,6 @@ class ViewingHistory {
 
 
     clear(path) {
-        // this.history = this.history.filter(item => {
-        //     return item.path !== path
-        // })
         this.history = this.history.map(item => {
             if (item.path === path) {
                 return {
@@ -253,7 +232,6 @@ class ViewingHistory {
             return -1
         }
 
-
         // 上传数据
         const upload_data = JSON.stringify(merge_data, null, 4); // 要发送的数据
         const res = await fetch('/api/fs/put', {
@@ -279,7 +257,6 @@ class ViewingHistory {
                 }
                 this.syncTime = Date.now()
                 this.history = merge_data.filter(item => !item.isDelete)
-                console.log(merge_data)
                 const button = $('.header-left .hope-image:last-child');
                 button && (button.style.borderColor = 'orangered');
                 return data
@@ -289,20 +266,15 @@ class ViewingHistory {
                 return { code: 500 }
             });
         // 每五分钟与服务器同步一次数据
-        // setTimeout(() => {
-        //     this.sync()
-        // }, 5 * 60 * 1000)
+        setTimeout(() => {
+            this.sync()
+        }, 5 * 60 * 1000)
         return res.code === 200 ? 1 : -1
     }
 
     //初始化
     init() {
         this.sync()
-        //todo 记录同步，每个十分钟且记录发生变化将文件中的数据与本地合并然后在上传
-        //或者每个几分钟自动同步，或者打开网页时同步一次，视频暂停时同步一次
-        //同步成功或失败后按钮显示不同颜色
-
-
     }
 
 }
@@ -559,10 +531,6 @@ class ViewUI {
                             console.log(e)
                         })
                     }, { once: true })
-                    // myVideo.currentTime = parseInt(video_times);
-                    // myVideo.play().catch((e) => {
-                    //     console.log(e)
-                    // })
                 }
                 let startTime = Date.now()
                 myVideo.addEventListener('timeupdate', async () => {
@@ -577,9 +545,6 @@ class ViewUI {
                         !!this.viewingHistory && this.viewingHistory.update(currentVideo)
                     }
                 })
-                myVideo.addEventListener('ended', () => {
-                    myVideo.removeAttribute('ended');
-                }, { once: true })
             }
         });
         observer.observe(document.body, { childList: true, subtree: true });
