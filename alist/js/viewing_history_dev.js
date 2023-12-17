@@ -237,18 +237,22 @@ class ViewingHistory {
                     const merge_get = merge_data_map.get(item.path);
                     if (!merge_get && !item.isDelete) {
                         merge_data_map.set(item.path, item)
-                    } else if (merge_get) {
+                    } else if (merge_get && !item.isDelete) {
                         //不管删除修改还是更新都保留最新的操作
                         if (item.modified > merge_get.modified) {
                             merge_data_map.set(item.path, item)
                         }
-                    } 
-                    // else if (merge_get && item.isDelete) {
-                    //     if (item.modified > merge_get.modified) {
-                    //         merge_data_map.delete(item.path)
-                    //     }
+                    } else if (merge_get && item.isDelete) {
+                        if (item.modified > merge_get.modified) {
+                            //删除的数据只保留几项必要的数据
+                            merge_data_map.set(item.path, {
+                                path: item.path,
+                                modified: item.modified,
+                                isDelete: item.isDelete,
+                            })
+                        }
 
-                    // }
+                    }
                 }
             }
             merge_data = [...merge_data_map.values()]
