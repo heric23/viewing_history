@@ -131,7 +131,6 @@ class ViewingHistory {
         //如果数组中不存在该对象则新增，否则修改
         const existingItemIndex = temp.findIndex(currentValue => currentValue.path === item.path);
         if (existingItemIndex === -1) {
-            // 不存在则新增
             temp.push(item);
         } else {
             // 存在则修改
