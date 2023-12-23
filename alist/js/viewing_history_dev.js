@@ -109,11 +109,10 @@ class ViewingHistory {
 
     get history() {
         const data = JSON.parse(window.localStorage.getItem('viewing-history'))
-        return data.filter(item => !item.isDelete)
+        return data
     }
     set history(value) {
         value.sort((a, b) => b.modified - a.modified)
-        // this._history = JSON.parse(localStorage.getItem('viewing-history')) || [];
         window.localStorage.setItem('viewing-history', JSON.stringify(value, null, 4));
         this._history = value;
     }
@@ -143,7 +142,7 @@ class ViewingHistory {
 
     search(path) {
         return this.history.find(item => {
-            return item.path === path
+            return item.path === path && !item.isDelete
         })
     }
 
@@ -398,12 +397,16 @@ class ViewUI {
         // 等待logo加载后添加按钮到页面
         const observer = new MutationObserver((mutations, observer) => {
             if (!!$('.header-left')) {
+                console.log('添加按钮')
                 observer.disconnect()
                 $('.header-left').appendChild(button);
             }
         });
         observer.observe(document.body, { childList: true, subtree: true });
+        //保险
+        let checkButton = setTimeout(() => {
 
+        }, 1000)
         button.addEventListener('click', () => {
             this.popupVisible = !this.popupVisible
         });
@@ -432,7 +435,7 @@ class ViewUI {
         popup.appendChild(box);
 
         // 遍历times对象并提取视频路径字符串
-        for (const item of this.viewingHistory.history) {
+        for (const item of this.viewingHistory.history.filter(item => !item.isDelete)) {
             // 创建列表项
             const li = document.createElement('li');
 
